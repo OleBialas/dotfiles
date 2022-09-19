@@ -233,7 +233,6 @@ return require('packer').startup(function()
   vim.g.vimwiki_list = {{path = '~/vimwiki', syntax = 'markdown', ext = '.md'}}
 
   -- File management
-  use 'ctrlpvim/ctrlp.vim'
   use 'jeetsukumaran/vim-buffergator'
   use 'scrooloose/nerdtree'
 
