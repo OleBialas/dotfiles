@@ -58,8 +58,9 @@ opt.mouse = "a"
 g.mapleader = ' '
 g.maplocalleader = ' '
 
+
 -------------------------------------------------
--- COLORSCHEMES
+-- AUTOCOMMANDS
 -------------------------------------------------
 
 -- Activate linelight when in goyo-mode
@@ -67,6 +68,18 @@ vim.cmd [[
 autocmd! User GoyoEnter Limelight
 autocmd! User GoyoLeave Limelight!
 ]]
+
+vim.api.nvim_create_augroup("black_on_save", { clear = true })
+vim.api.nvim_create_autocmd("AutoFormat", {
+    group = "black_on_save",
+    pattern = { "BufWritePre", "*.py" },
+    command = "Black",
+})
+
+-------------------------------------------------
+-- COLORSCHEMES
+-------------------------------------------------
+
 -- Uncomment just ONE of the following colorschemes!
 -- local ok, _ = pcall(vim.cmd, 'colorscheme base16-dracula')
 -- local ok, _ = pcall(vim.cmd, 'colorscheme base16-gruvbox-dark-medium')
@@ -235,6 +248,9 @@ return require('packer').startup(function()
   -- File management
   use 'jeetsukumaran/vim-buffergator'
   use 'scrooloose/nerdtree'
+
+  -- Faster editing
+  use 'tpope/vim-commentary'
 
   -- Language support
   use 'daeyun/vim-matlab'
