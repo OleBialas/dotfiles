@@ -69,10 +69,8 @@ autocmd! User GoyoEnter Limelight
 autocmd! User GoyoLeave Limelight!
 ]]
 
-vim.api.nvim_create_augroup("black_on_save", { clear = true })
-vim.api.nvim_create_autocmd("AutoFormat", {
-    group = "black_on_save",
-    pattern = { "BufWritePre", "*.py" },
+vim.api.nvim_create_autocmd("BufWritePre", {
+    pattern = "*.py",
     command = "Black",
 })
 
