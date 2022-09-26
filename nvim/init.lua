@@ -99,9 +99,6 @@ end
 -- Open and close nerdtree
 map('n', '<F6>', '<CMD>NERDTreeToggle<CR>')
 
--- Format Python code with black
-map('n', '<leader>ck', '<CMD>Black<CR>')
-
 -- Keybindings for telescope
 map('n', '<leader>fr', '<CMD>Telescope oldfiles<CR>')
 map('n', '<leader>ff', '<CMD>Telescope find_files<CR>')
@@ -256,6 +253,7 @@ return require('packer').startup(function()
   use 'lervag/vimtex'
   use 'jalvesaq/Nvim-R'
   use 'vim-python/python-syntax'
+  vim.g.python_highlight_all = 1
   use 'ambv/black'  -- auto-formatting
 end)
 
