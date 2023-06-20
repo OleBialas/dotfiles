@@ -114,7 +114,7 @@ mytextclock = wibox.widget.textclock()
 local taglist_buttons = gears.table.join(
                     awful.button({ }, 1, function(t) t:view_only() end),
                     awful.button({ modkey }, 1, function(t)
-                                              if client.focus then
+                                             if client.focus then
                                                   client.focus:move_to_tag(t)
                                               end
                                           end),
@@ -256,8 +256,8 @@ globalkeys = gears.table.join(
     awful.key({ modkey,           }, "w", function () mymainmenu:show() end,
               {description = "show main menu", group = "awesome"}),
     -- My key bindings
-    awful.key({ }, "F1", function () awful.util.spawn_with_shell("alacritty -e neomutt") end),
-    awful.key({ }, "F2", function () awful.util.spawn_with_shell("alacritty -e calcurse") end),
+    awful.key({modkey, }, "F1", function () awful.util.spawn_with_shell("alacritty -e neomutt") end),
+    awful.key({modkey, }, "F2", function () awful.util.spawn_with_shell("emacsclient -c -a 'emacs'") end),
     -- Layout manipulation
     awful.key({ modkey, "Shift"   }, "j", function () awful.client.swap.byidx(  1)    end,
               {description = "swap with next client by index", group = "client"}),
@@ -569,8 +569,8 @@ client.connect_signal("unfocus", function(c) c.border_color = beautiful.border_n
 
 -- autostart applications
 awful.spawn.with_shell("picom")
-awful.spawn.with_shell("nitrogen --restore")
-awful.spawn.with_shell()
+awful.spawn.with_shell("emacs --daemon")
+awful.spawn.with_shell("shuf -e -n1 $HOME/Pictures/Wallpapers/* | xargs feh --bg-scale")
 
 -- make gaps between windows
 beautiful.useless_gap = 4
@@ -580,5 +580,4 @@ beautiful.gap_single_client = true
 client.connect_signal("manage", function (c)
     c.shape = gears.shape.rounded_rect
 end)
-
-
+ 
