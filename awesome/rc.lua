@@ -14,11 +14,15 @@ local beautiful = require("beautiful")
 local naughty = require("naughty")
 local menubar = require("menubar")
 local hotkeys_popup = require("awful.hotkeys_popup")
--- network widgets from github.com/pltanton/net_widgets.git
-local net_widgets = require("net_widgets")
 -- Enable hotkeys help widget for VIM and other apps
 -- when client with a matching name is opened:
 require("awful.hotkeys_popup.keys")
+
+-- wisdgets from awesome-wm-widgets
+local cpu_widget = require("awesome-wm-widgets.cpu-widget.cpu-widget") -- cpu load
+local ram_widget = require("awesome-wm-widgets.ram-widget.ram-widget")
+local battery_widget = require("awesome-wm-widgets.battery-widget.battery")
+local net_speed_widget = require("awesome-wm-widgets.net-speed-widget.net-speed")
 
 -- {{{ Error handling
 -- Check if awesome encountered an error during startup and fell back to
@@ -51,7 +55,7 @@ beautiful.init(gears.filesystem.get_themes_dir() .. "default/theme.lua")
 
 -- This is used later as the default terminal and editor to run.
 terminal = "alacritty"
-editor = os.getenv("EDITOR") or "nano"
+editor = os.getenv("EDITOR") or "vim"
 editor_cmd = terminal .. " -e " .. editor
 
 -- Default modkey.
@@ -92,12 +96,6 @@ mymainmenu = awful.menu({ items = { { "awesome", myawesomemenu, beautiful.awesom
 mylauncher = awful.widget.launcher({ image = beautiful.awesome_icon,
                                      menu = mymainmenu })
 
--- define custom widgets
-net_wireless = net_widgets.wireless({interface="wlan0"})
-net_wired = net_widgets.indicator({
-    interfaces  = {"enp1s0f0", "enp4s0f3u1u1"},
-    timeout     = 5
-})
 
 -- Menubar configuration
 menubar.utils.terminal = terminal -- Set the terminal for applications that require it
@@ -211,10 +209,11 @@ awful.screen.connect_for_each_screen(function(s)
         s.mytasklist, -- Middle widget
         { -- Right widgets
             layout = wibox.layout.fixed.horizontal,
-            mykeyboardlayout,
-	    net_wireless,
-	    net_wired,
+            ram_widget(),
+            cpu_widget(),
+            net_speed_widget(),
             wibox.widget.systray(),
+            battery_widget(),
             mytextclock,
             s.mylayoutbox,
         },
@@ -255,9 +254,16 @@ globalkeys = gears.table.join(
     ),
     awful.key({ modkey,           }, "w", function () mymainmenu:show() end,
               {description = "show main menu", group = "awesome"}),
-    -- My key bindings
+    -- F keys
     awful.key({modkey, }, "F1", function () awful.util.spawn_with_shell("alacritty -e neomutt") end),
-    awful.key({modkey, }, "F2", function () awful.util.spawn_with_shell("emacsclient -c -a 'emacs'") end),
+    awful.key({modkey, }, "F2", function () awful.util.spawn_with_shell("alacritty -e nvim -c 'VimwikiIndex'") end),
+    awful.key({modkey, }, "F3", function () awful.util.spawn_with_shell("alacritty -e nvim -c 'VimwikiMakeDiaryNote'") end),
+    -- Function keys
+    -- raise/lower/mute volume, requires pipewire audio and pamixer
+    awful.key({ }, "XF86AudioLowerVolume", function () awful.util.spawn("pamixer -d 5") end),
+    awful.key({ }, "XF86AudioRaiseVolume", function () awful.util.spawn("pamixer -i 5") end),
+    awful.key({ }, "XF86AudioMute", function () awful.util.spawn("pamixer -t") end),
+
     -- Layout manipulation
     awful.key({ modkey, "Shift"   }, "j", function () awful.client.swap.byidx(  1)    end,
               {description = "swap with next client by index", group = "client"}),
@@ -496,6 +502,10 @@ awful.rules.rules = {
       }, properties = { titlebars_enabled = false }
     },
 
+    -- make sure that firefox is tiled properly
+    { rule = { class = "firefox" },
+          properties = { opacity = 1, maximized = false, floating = false } },
+
     -- Set Firefox to always map on the tag named "2" on screen 1.
     -- { rule = { class = "Firefox" },
     --   properties = { screen = 1, tag = "2" } },
@@ -546,7 +556,6 @@ client.connect_signal("request::titlebars", function(c)
             layout  = wibox.layout.flex.horizontal
         },
         { -- Right
-            require("battery-widget") {}
             awful.titlebar.widget.floatingbutton (c),
             awful.titlebar.widget.maximizedbutton(c),
             awful.titlebar.widget.stickybutton   (c),
@@ -570,8 +579,8 @@ client.connect_signal("unfocus", function(c) c.border_color = beautiful.border_n
 
 -- autostart applications
 awful.spawn.with_shell("picom")
-awful.spawn.with_shell("emacs --daemon")
-awful.spawn.with_shell("shuf -e -n1 $HOME/Pictures/Wallpapers/* | xargs feh --bg-scale")
+awful.spawn.with_shell("feh --bg-fill $HOME/pictures/wallpapers/pixel_space.png")
+-- awful.spawn.with_shell("shuf -e -n1 $HOME/pictures/wallpapers/* | xargs feh --bg-scale")
 
 -- make gaps between windows
 beautiful.useless_gap = 4
