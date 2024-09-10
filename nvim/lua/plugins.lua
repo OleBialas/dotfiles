@@ -62,6 +62,10 @@ require("lazy").setup({
         "scrooloose/nerdtree"
     },
 
+    {   -- write files with sudo
+        "lambdalisue/vim-suda"
+    },
+
     {   -- math rendering in terminal
         "jbyuki/nabla.nvim"
     },
@@ -92,6 +96,41 @@ require("lazy").setup({
                     require("lspconfig")[server_name].setup({})
                 end,
             })
+        end,
+    },
+
+    {   -- convert .ipynb to .md/.py and vice versa
+        "GCBallesteros/jupytext.nvim",
+        config=true,
+    },
+
+    {   -- interact with REPL
+        "Vigemus/iron.nvim",
+        config=function()
+            local iron = require("iron.core")
+            local view = require("iron.view")
+            iron.setup {
+              config = {
+                scratch_repl = true,
+                repl_definition = {
+                  python = {
+                    command = { "ipython" },
+                    format = require("iron.fts.common").bracketed_paste_python
+                  }
+                },
+                repl_open_cmd = require('iron.view').bottom("20%"),
+              },
+              keymaps = {
+                visual_send = "<leader>sc",
+                clear = "<leader>cl",
+              },
+              ignore_blank_lines = true, -- ignore blank lines when sending visual select lines
+            }
+            -- iron also has a list of commands, see :h iron-commands for all available commands
+            vim.keymap.set('n', '<leader>rs', '<cmd>IronRepl<cr>')
+            vim.keymap.set('n', '<leader>rr', '<cmd>IronRestart<cr>')
+            vim.keymap.set('n', '<leader>rf', '<cmd>IronFocus<cr>')
+            vim.keymap.set('n', '<leader>rh', '<cmd>IronHide<cr>')
         end,
     },
 
