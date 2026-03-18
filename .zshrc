@@ -30,38 +30,50 @@ autoload edit-command-line; zle -N edit-command-line
 bindkey '^e' edit-command-line
 
 # Configure PATH
-export PATH=/home/obi/.config/emacs/bin:$PATH
+export PATH=$PATH:/snap/bin
+export PATH="$HOME/.local/bin:$PATH"
+export PATH=$PATH:~/.roswell/bin  # lisp jupyter kernel
 
 # Set aliases
 # delete orphaned packages, if none are found this retruns "error: argument '-' specified with empty stdin"
 alias autoremove="sudo pacman -Qtdq | sudo pacman -Rns -"
 alias cisco="/opt/cisco/anyconnect/bin/vpnui" # VPN client
 alias vim="/usr/bin/nvim" # use neovim
+alias bonnvpn="sudo openconnect --protocol=anyconnect --useragent=AnyConnect --cafile=/etc/ssl/certs/T-TeleSec_GlobalRoot_Class_2.pem unibn-vpn.uni-bonn.de"
 # Fish-like suggestions
-source /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
+source /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh
 # Load zsh-syntax-highlighting; should be last.
-source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh 2>/dev/null
+source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 
 
+# Created by `pipx` on 2025-04-04 08:43:59
+export PATH="$PATH:/home/olebi/.local/bin"
+# activate pipx completions for zsh you need to have
 
-[ -f /opt/miniconda3/etc/profile.d/conda.sh ] && source /opt/miniconda3/etc/profile.d/conda.sh
+autoload -U bashcompinit
+bashcompinit
+
+eval $(keychain --eval --agents ssh --quiet id_ed25519)  # add ssh key
+
+eval "$(register-python-argcomplete pipx)"
 
 # >>> conda initialize >>>
 # !! Contents within this block are managed by 'conda init' !!
-__conda_setup="$('/home/obi/miniforge3/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"
+__conda_setup="$('/home/olebi/miniforge3/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"
 if [ $? -eq 0 ]; then
     eval "$__conda_setup"
 else
-    if [ -f "/home/obi/miniforge3/etc/profile.d/conda.sh" ]; then
-        . "/home/obi/miniforge3/etc/profile.d/conda.sh"
+    if [ -f "/home/olebi/miniforge3/etc/profile.d/conda.sh" ]; then
+        . "/home/olebi/miniforge3/etc/profile.d/conda.sh"
     else
-        export PATH="/home/obi/miniforge3/bin:$PATH"
+        export PATH="/home/olebi/miniforge3/bin:$PATH"
     fi
 fi
 unset __conda_setup
-
-if [ -f "/home/obi/miniforge3/etc/profile.d/mamba.sh" ]; then
-    . "/home/obi/miniforge3/etc/profile.d/mamba.sh"
-fi
 # <<< conda initialize <<<
 
+export PATH="/home/olebi/.pixi/bin:$PATH"
+eval "$(pixi completion --shell zsh)"
+
+# prevent the VS Code askpass from interfering with command-line git while still allowing VS Code's GUI to work normally
+unset GIT_ASKPASS
