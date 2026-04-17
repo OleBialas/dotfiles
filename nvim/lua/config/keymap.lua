@@ -58,6 +58,48 @@ nmap('<c-u>', '<c-u>zz')
 nmap('H', '<cmd>tabprevious<cr>')
 nmap('L', '<cmd>tabnext<cr>')
 
+local function run_cell()
+  local buf = vim.api.nvim_get_current_buf()
+  local cursor = vim.api.nvim_win_get_cursor(0)[1]
+  local lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
+  local total = #lines
+
+  -- find start: walk up to find nearest # %% or beginning of file
+  local start_line = 1
+  for i = cursor - 1, 1, -1 do
+    if lines[i]:match('^# ?%%%%') then
+      start_line = i + 1
+      break
+    end
+  end
+
+  -- find end: walk down to find next # %% or end of file
+  local end_line = total
+  for i = cursor, total do
+    if i > cursor and lines[i]:match('^# ?%%%%') then
+      end_line = i - 1
+      break
+    end
+  end
+
+  -- strip leading/trailing blank lines
+  while start_line <= end_line and lines[start_line]:match('^%s*$') do
+    start_line = start_line + 1
+  end
+  while end_line >= start_line and lines[end_line]:match('^%s*$') do
+    end_line = end_line - 1
+  end
+
+  if start_line > end_line then return end
+
+  -- visually select and evaluate
+  vim.api.nvim_win_set_cursor(0, { start_line, 0 })
+  vim.cmd('normal! V')
+  vim.api.nvim_win_set_cursor(0, { end_line, 0 })
+  vim.cmd('normal! ' .. vim.api.nvim_replace_termcodes('<cr>', true, false, true))
+  vim.fn.feedkeys(':<C-u>MoltenEvaluateVisual<cr>', 'n')
+end
+
 local function toggle_light_dark_theme()
   if vim.o.background == 'light' then
     vim.o.background = 'dark'
@@ -110,7 +152,8 @@ wk.add({
 -- normal mode with <leader>
 wk.add({
   {
-    { '<leader><cr>', ':MoltenEvaluateOperator<cr>', desc = 'molten eval operator' },
+    { '<leader><cr>', run_cell, desc = 'run current cell' },
+    { '<c-cr>', run_cell, desc = 'run current cell' },
 
     { '<leader>e', group = '[e]dit' },
 
