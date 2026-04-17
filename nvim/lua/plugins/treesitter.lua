@@ -8,6 +8,10 @@ return {
     },
     config = function()
       ---@diagnostic disable-next-line: missing-fields
+      vim.api.nvim_create_autocmd('FileType', {
+        callback = function() vim.treesitter.start() end,
+      })
+
       require('nvim-treesitter').setup {
         auto_install = true,
         ensure_installed = {
