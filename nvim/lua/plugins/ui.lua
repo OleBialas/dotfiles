@@ -1,12 +1,9 @@
 return {
-  -- telescope
-  -- a nice seletion UI also to find and open files
   {
     'nvim-telescope/telescope.nvim',
     dependencies = {
       { 'nvim-telescope/telescope-ui-select.nvim' },
       { 'nvim-telescope/telescope-fzf-native.nvim', build = 'make' },
-      { 'nvim-telescope/telescope-dap.nvim' },
     },
     config = function()
       local telescope = require 'telescope'
@@ -28,9 +25,7 @@ return {
       end
 
       local telescope_config = require 'telescope.config'
-      -- Clone the default Telescope configuration
       local vimgrep_arguments = { unpack(telescope_config.values.vimgrep_arguments) }
-      -- I don't want to search in the `docs` directory (rendered quarto output).
       table.insert(vimgrep_arguments, '--glob')
       table.insert(vimgrep_arguments, '!docs/*')
 
@@ -70,8 +65,6 @@ return {
               '--glob',
               '!.git/*',
               '--glob',
-              '!**/.Rpro.user/*',
-              '--glob',
               '!_site/*',
               '--glob',
               '!docs/**/*.html',
@@ -84,73 +77,21 @@ return {
             require('telescope.themes').get_dropdown(),
           },
           fzf = {
-            fuzzy = true,                   -- false will only do exact matching
-            override_generic_sorter = true, -- override the generic sorter
-            override_file_sorter = true,    -- override the file sorter
-            case_mode = 'smart_case',       -- or "ignore_case" or "respect_case"
+            fuzzy = true,
+            override_generic_sorter = true,
+            override_file_sorter = true,
+            case_mode = 'smart_case',
           },
         },
       }
       telescope.load_extension 'fzf'
       telescope.load_extension 'ui-select'
-      telescope.load_extension 'dap'
     end,
   },
 
-    {
-        'cameron-wags/rainbow_csv.nvim',
-        config = true,
-        ft = {
-            'csv',
-            'tsv',
-            'csv_semicolon',
-            'csv_whitespace',
-            'csv_pipe',
-            'rfc_csv',
-            'rfc_semicolon'
-        },
-        cmd = {
-            'RainbowDelim',
-            'RainbowDelimSimple',
-            'RainbowDelimQuoted',
-            'RainbowMultiDelim'
-        }
-    },
-
-  { -- Highlight todo, notes, etc in comments
-    'folke/todo-comments.nvim',
-    dependencies = { 'nvim-lua/plenary.nvim' },
-    opts = { signs = false },
-  },
-
-  { -- edit the file system as a buffer
-    'stevearc/oil.nvim',
-    opts = {
-      keymaps = {
-        ['<C-s>'] = false,
-        ['<C-h>'] = false,
-        ['<C-l>'] = false,
-      },
-      view_options = {
-        show_hidden = true,
-      },
-    },
-    dependencies = { 'nvim-tree/nvim-web-devicons' },
-    keys = {
-      { '-',          ':Oil<cr>', desc = 'oil' },
-      { '<leader>ef', ':Oil<cr>', desc = 'edit [f]iles' },
-    },
-    cmd = 'Oil',
-  },
-
-  { -- highlight occurences of current word
-    'RRethy/vim-illuminate',
-    enabled = false,
-  },
-
-  { -- filetree
+  {
     'nvim-tree/nvim-tree.lua',
-    enabled = true,
+    dependencies = { 'nvim-tree/nvim-web-devicons' },
     keys = {
       { '<c-t>', ':NvimTreeToggle<cr>', desc = 'toggle nvim-tree' },
     },
@@ -172,59 +113,11 @@ return {
     end,
   },
 
-  -- show keybinding help window
   {
     'folke/which-key.nvim',
-    enabled = true,
     config = function()
       require('which-key').setup {}
       require 'config.keymap'
-    end,
-  },
-
-  { -- terminal
-    'akinsho/toggleterm.nvim',
-    opts = {
-      open_mapping = [[<c-\>]],
-      direction = 'float',
-    },
-  },
-
-  { -- show indent lines
-    'lukas-reineke/indent-blankline.nvim',
-    enabled = false,
-    main = 'ibl',
-    opts = {
-      indent = { char = '│' },
-    },
-  },
-
-  { -- highlight markdown headings and code blocks etc.
-    'lukas-reineke/headlines.nvim',
-    enabled = false,
-    dependencies = 'nvim-treesitter/nvim-treesitter',
-    config = function()
-      require('headlines').setup {
-        quarto = {
-          query = vim.treesitter.query.parse(
-            'markdown',
-            [[
-                (fenced_code_block) @codeblock
-                ]]
-          ),
-          codeblock_highlight = 'CodeBlock',
-          treesitter_language = 'markdown',
-        },
-        markdown = {
-          query = vim.treesitter.query.parse(
-            'markdown',
-            [[
-                (fenced_code_block) @codeblock
-                ]]
-          ),
-          codeblock_highlight = 'CodeBlock',
-        },
-      }
     end,
   },
 }

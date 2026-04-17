@@ -2,36 +2,27 @@ return {
   {
     'nvim-treesitter/nvim-treesitter',
     dev = false,
+    build = ':TSUpdate',
     dependencies = {
-      {
-        'nvim-treesitter/nvim-treesitter-textobjects',
-      },
+      'nvim-treesitter/nvim-treesitter-textobjects',
     },
-    run = ':TSUpdate',
     config = function()
       ---@diagnostic disable-next-line: missing-fields
-      require('nvim-treesitter.configs').setup {
+      require('nvim-treesitter').setup {
         auto_install = true,
         ensure_installed = {
-          'r',
           'python',
           'markdown',
           'markdown_inline',
-          'julia',
           'bash',
           'yaml',
           'lua',
           'vim',
           'query',
           'vimdoc',
-          'latex', -- requires tree-sitter-cli (installed automatically via Mason)
           'html',
           'css',
-          'dot',
           'javascript',
-          'mermaid',
-          'norg',
-          'typescript',
         },
         highlight = {
           enable = true,
@@ -54,7 +45,6 @@ return {
             enable = true,
             lookahead = true,
             keymaps = {
-              -- You can use the capture groups defined in textobjects.scm
               ['af'] = '@function.outer',
               ['if'] = '@function.inner',
               ['ac'] = '@class.outer',
@@ -63,7 +53,7 @@ return {
           },
           move = {
             enable = true,
-            set_jumps = true, -- whether to set jumps in the jumplist
+            set_jumps = true,
             goto_next_start = {
               [']m'] = '@function.outer',
               [']]'] = '@class.inner',
