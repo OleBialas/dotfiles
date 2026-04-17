@@ -1,6 +1,20 @@
 -- Python provider for molten-nvim
 vim.g.python3_host_prog = vim.fn.expand('~/.pixi/envs/python/bin/python')
 
+-- Defer clipboard provider on WSL to avoid slow startup
+vim.g.clipboard = {
+  name = 'WSL Clipboard',
+  copy = {
+    ['+'] = 'clip.exe',
+    ['*'] = 'clip.exe',
+  },
+  paste = {
+    ['+'] = 'powershell.exe -NoLogo -NoProfile -c [Console]::Out.Write($(Get-Clipboard -Raw).tostring().replace("`r", ""))',
+    ['*'] = 'powershell.exe -NoLogo -NoProfile -c [Console]::Out.Write($(Get-Clipboard -Raw).tostring().replace("`r", ""))',
+  },
+  cache_enabled = 1,
+}
+
 -- border style used by lsp and completion popups
 vim.g.border = { '╭', '─', '╮', '│', '╯', '─', '╰', '│' }
 

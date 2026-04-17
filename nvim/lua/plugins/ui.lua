@@ -1,6 +1,7 @@
 return {
   {
     'nvim-telescope/telescope.nvim',
+    cmd = 'Telescope',
     dependencies = {
       { 'nvim-telescope/telescope-ui-select.nvim' },
       { 'nvim-telescope/telescope-fzf-native.nvim', build = 'make' },
@@ -115,6 +116,7 @@ return {
 
   {
     'folke/which-key.nvim',
+    event = 'VeryLazy',
     config = function()
       require('which-key').setup {}
       require 'config.keymap'

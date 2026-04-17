@@ -2,6 +2,7 @@ return {
   {
     'nvim-treesitter/nvim-treesitter',
     dev = false,
+    event = { 'BufReadPre', 'BufNewFile' },
     build = ':TSUpdate',
     dependencies = {
       'nvim-treesitter/nvim-treesitter-textobjects',
@@ -9,7 +10,7 @@ return {
     config = function()
       ---@diagnostic disable-next-line: missing-fields
       vim.api.nvim_create_autocmd('FileType', {
-        callback = function() vim.treesitter.start() end,
+        callback = function() pcall(vim.treesitter.start) end,
       })
 
       require('nvim-treesitter').setup {

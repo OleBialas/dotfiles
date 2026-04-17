@@ -1,5 +1,5 @@
 return {
-  { 'LunarVim/bigfile.nvim' },
+  { 'LunarVim/bigfile.nvim', event = 'BufReadPre' },
 
   {
     'kylechui/nvim-surround',
