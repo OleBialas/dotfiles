@@ -1,11 +1,18 @@
 return {
   {
     'GCBallesteros/jupytext.nvim',
-    opts = {
-      style = 'markdown',
-      output_extension = 'md',
-      force_ft = 'markdown',
-    },
+    lazy = false,
+    config = function()
+      require('jupytext').setup {
+        custom_language_formatting = {
+          python = {
+            extension = 'py',
+            style = 'hydrogen',
+            force_ft = 'python',
+          },
+        },
+      }
+    end,
   },
 
   {
