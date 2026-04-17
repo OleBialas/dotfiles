@@ -6,6 +6,42 @@
 DllPath := A_ScriptDir "\VirtualDesktopAccessor.dll"
 hVDA := DllCall("LoadLibrary", "Str", DllPath, "Ptr")
 
+; --- Persistent desktop indicator (above taskbar) ---
+DesktopIndicator := Gui("+AlwaysOnTop -Caption +ToolWindow +E0x20")
+DesktopIndicator.BackColor := "111111"
+DesktopIndicator.MarginX := 4
+DesktopIndicator.MarginY := 4
+DesktopIndicator.SetFont("s11", "Consolas")
+DesktopLabels := []
+Loop 9 {
+    opt := A_Index = 1 ? "x4 y4" : "x+2 yp"
+    DesktopLabels.Push(DesktopIndicator.AddText(opt " c555555", " " A_Index " "))
+}
+WinSetTransparent(220, DesktopIndicator)
+DesktopIndicator.Show("NoActivate AutoSize")
+
+UpdateDesktopIndicator() {
+    global hVDA, DesktopIndicator, DesktopLabels
+    count := DllCall("VirtualDesktopAccessor\GetDesktopCount")
+    current := DllCall("VirtualDesktopAccessor\GetCurrentDesktopNumber")
+    Loop 9 {
+        idx := A_Index - 1
+        if (idx = current)
+            DesktopLabels[A_Index].SetFont("c4488CC bold")
+        else if (A_Index <= count)
+            DesktopLabels[A_Index].SetFont("c4488CC norm")
+        else
+            DesktopLabels[A_Index].SetFont("c555555 norm")
+    }
+    DesktopIndicator.Show("NoActivate AutoSize")
+    DesktopIndicator.GetPos(,, &w, &h)
+    DesktopIndicator.Show("NoActivate x100 y" (A_ScreenHeight - 48 - h - 30))
+    WinSetAlwaysOnTop(true, DesktopIndicator)
+}
+
+UpdateDesktopIndicator()
+SetTimer(UpdateDesktopIndicator, 150)
+
 EnsureDesktopExists(num) {
     global hVDA
     count := DllCall("VirtualDesktopAccessor\GetDesktopCount")
