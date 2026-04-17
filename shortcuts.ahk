@@ -1,5 +1,10 @@
 #Requires AutoHotkey v2.0
 
+; Prevent Start menu from opening on lone Win key press
+A_MenuMaskKey := "vkE8"
+~LWin::Send("{Blind}{vkE8}")
+~RWin::Send("{Blind}{vkE8}")
+
 ; --- Virtual Desktop support via VirtualDesktopAccessor.dll ---
 ; DLL source: https://github.com/Ciantic/VirtualDesktopAccessor/releases
 ; Place VirtualDesktopAccessor.dll in the same directory as this script
