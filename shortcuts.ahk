@@ -25,10 +25,15 @@ Loop 9 {
 WinSetTransparent(220, DesktopIndicator)
 DesktopIndicator.Show("NoActivate AutoSize")
 
+LastDesktopState := ""
 UpdateDesktopIndicator() {
-    global hVDA, DesktopIndicator, DesktopLabels
+    global hVDA, DesktopIndicator, DesktopLabels, LastDesktopState
     count := DllCall("VirtualDesktopAccessor\GetDesktopCount")
     current := DllCall("VirtualDesktopAccessor\GetCurrentDesktopNumber")
+    state := current ":" count
+    if (state = LastDesktopState)
+        return
+    LastDesktopState := state
     Loop 9 {
         idx := A_Index - 1
         if (idx = current)
@@ -38,7 +43,6 @@ UpdateDesktopIndicator() {
         else
             DesktopLabels[A_Index].SetFont("c555555 norm")
     }
-    DesktopIndicator.Show("NoActivate AutoSize")
     DesktopIndicator.GetPos(,, &w, &h)
     DesktopIndicator.Show("NoActivate x100 y" (A_ScreenHeight - 48 - h - 30))
     WinSetAlwaysOnTop(true, DesktopIndicator)
