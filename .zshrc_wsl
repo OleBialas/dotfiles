@@ -1,0 +1,79 @@
+# Lines configured by zsh-newuser-install
+HISTFILE=~/.histfile
+HISTSIZE=1000
+SAVEHIST=10000
+bindkey -e
+
+autoload -U colors && colors
+PS1="%B%{$fg[red]%}[%{$fg[yellow]%}%n%{$fg[green]%}@%{$fg[blue]%}%M %{$fg[magenta]%}%~%{$fg[red]%}]%{$reset_color%}$%b "
+
+# completion
+autoload -Uz compinit
+autoload -U bashcompinit
+zstyle :compinstall filename '/home/obi/.zshrc'
+zstyle ':completion:*' menu select
+zmodload zsh/complist
+compinit
+bashcompinit
+_comp_options+=(globdots)
+
+# history search with arrow keys
+bindkey '\e[A' history-search-backward
+bindkey '\e[B' history-search-forward
+
+# edit line in vim with ctrl-e
+autoload edit-command-line; zle -N edit-command-line
+bindkey '^e' edit-command-line
+
+# PATH
+export PATH="$HOME/.local/bin:$PATH"
+export PATH="/home/olebi/.pixi/bin:$PATH"
+export PATH="/home/olebi/.opencode/bin:$PATH"
+export PATH="/opt/nvim-linux-x86_64/bin:$PATH"
+export PATH="$PATH:/snap/bin"
+export PATH="$PATH:$HOME/.roswell/bin"
+
+# aliases
+alias vim="nvim"
+alias bonnvpn="sudo openconnect --protocol=anyconnect --useragent=AnyConnect --cafile=/etc/ssl/certs/T-TeleSec_GlobalRoot_Class_2.pem unibn-vpn.uni-bonn.de"
+
+# fish-like suggestions and syntax highlighting
+source /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+
+# ssh key
+eval $(keychain --eval --agents ssh --quiet id_ed25519)
+
+# pixi completions (cached to avoid running pixi on every shell)
+if [[ ! -f ~/.zsh_pixi_completion ]] || [[ ~/.zsh_pixi_completion -ot ~/.pixi/bin/pixi ]]; then
+  pixi completion --shell zsh >~/.zsh_pixi_completion
+fi
+source ~/.zsh_pixi_completion
+
+# lazy-load nvm (only when first used)
+export NVM_DIR="$HOME/.nvm"
+nvm() {
+  unset -f nvm node npm npx
+  [ -s "$NVM_DIR/nvm.sh" ] && source "$NVM_DIR/nvm.sh"
+  [ -s "$NVM_DIR/bash_completion" ] && source "$NVM_DIR/bash_completion"
+  nvm "$@"
+}
+node() { nvm; node "$@"; }
+npm()  { nvm; npm  "$@"; }
+npx()  { nvm; npx  "$@"; }
+
+# prevent VS Code askpass from interfering with CLI git
+unset GIT_ASKPASS
+
+# API keys
+export NVIDIA_API_KEY="<your-key-here>"
+
+# redirect to home if launched from Windows filesystem (e.g. new wezterm tab)
+[[ "$PWD" == /mnt/* ]] && cd ~
+
+# tell wezterm the current directory via OSC 7 after each command
+_WEZTERM_HOSTNAME="${HOSTNAME:-$(hostname)}"
+__wezterm_set_cwd() {
+  printf "\033]7;file://%s%s\033\\" "${_WEZTERM_HOSTNAME}" "${PWD}"
+}
+precmd_functions+=(__wezterm_set_cwd)
