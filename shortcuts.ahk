@@ -44,7 +44,9 @@ UpdateDesktopIndicator() {
             DesktopLabels[A_Index].SetFont("c555555 norm")
     }
     DesktopIndicator.GetPos(,, &w, &h)
-    DesktopIndicator.Show("NoActivate x100 y" (A_ScreenHeight - 48 - h - 30))
+    MonitorGetWorkArea(MonitorGetPrimary(), &mLeft, &mTop, &mRight, &mBottom)
+    taskbarH := A_ScreenHeight - mBottom
+    DesktopIndicator.Show("NoActivate x100 y" (mBottom + (taskbarH - h) // 2))
     WinSetAlwaysOnTop(true, DesktopIndicator)
 }
 
@@ -60,10 +62,33 @@ EnsureDesktopExists(num) {
     }
 }
 
+ActivateTopWindow() {
+    global hVDA
+    for hwnd in WinGetList() {
+        class := WinGetClass(hwnd)
+        if (class = "Shell_TrayWnd" || class = "WorkerW" || class = "Progman")
+            continue
+        if (WinGetProcessName("ahk_id " hwnd) ~= "i)AutoHotkey")
+            continue
+        if (WinGetTitle(hwnd) = "")
+            continue
+        if DllCall("VirtualDesktopAccessor\IsWindowOnCurrentVirtualDesktop", "Ptr", hwnd) {
+            myThread := DllCall("GetCurrentThreadId", "UInt")
+            targetThread := DllCall("GetWindowThreadProcessId", "Ptr", hwnd, "Ptr", 0, "UInt")
+            DllCall("AttachThreadInput", "UInt", myThread, "UInt", targetThread, "Int", true)
+            DllCall("SetForegroundWindow", "Ptr", hwnd)
+            DllCall("AttachThreadInput", "UInt", myThread, "UInt", targetThread, "Int", false)
+            break
+        }
+    }
+}
+
 GoToDesktop(num) {
     global hVDA
     EnsureDesktopExists(num)
+    DllCall("User32\AllowSetForegroundWindow", "Int", -1)
     DllCall("VirtualDesktopAccessor\GoToDesktopNumber", "Int", num - 1)
+    SetTimer(ActivateTopWindow, -350)
 }
 
 MoveWindowToDesktop(num) {
