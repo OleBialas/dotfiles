@@ -94,10 +94,8 @@ local function run_cell()
 
   -- visually select and evaluate
   vim.api.nvim_win_set_cursor(0, { start_line, 0 })
-  vim.cmd('normal! V')
-  vim.api.nvim_win_set_cursor(0, { end_line, 0 })
-  vim.cmd('normal! ' .. vim.api.nvim_replace_termcodes('<cr>', true, false, true))
-  vim.fn.feedkeys(':<C-u>MoltenEvaluateVisual<cr>', 'n')
+  local keys = vim.api.nvim_replace_termcodes('V' .. end_line .. 'G:<C-u>MoltenEvaluateVisual<CR>', true, false, true)
+  vim.api.nvim_feedkeys(keys, 'x', false)
 end
 
 local function toggle_light_dark_theme()
@@ -107,6 +105,9 @@ local function toggle_light_dark_theme()
     vim.o.background = 'light'
   end
 end
+
+nmap('<C-j>', function() vim.cmd('silent! /^# %%') end)
+nmap('<C-k>', function() vim.cmd('silent! ?^# %%') end)
 
 -- normal mode
 wk.add({
@@ -153,7 +154,6 @@ wk.add({
 wk.add({
   {
     { '<leader><cr>', run_cell, desc = 'run current cell' },
-    { '<c-cr>', run_cell, desc = 'run current cell' },
 
     { '<leader>e', group = '[e]dit' },
 
