@@ -92,10 +92,8 @@ local function run_cell()
 
   if start_line > end_line then return end
 
-  -- visually select and evaluate
-  vim.api.nvim_win_set_cursor(0, { start_line, 0 })
-  local keys = vim.api.nvim_replace_termcodes('V' .. end_line .. 'G:<C-u>MoltenEvaluateVisual<CR>', true, false, true)
-  vim.api.nvim_feedkeys(keys, 'x', false)
+  vim.fn.MoltenEvaluateRange(start_line, end_line)
+  vim.api.nvim_win_set_cursor(0, { end_line, 0 })
 end
 
 local function toggle_light_dark_theme()
@@ -191,6 +189,36 @@ wk.add({
 
     -- molten / jupyter
     { '<leader>m', group = '[m]olten / jupyter' },
+    {
+      '<leader>mA',
+      function()
+        local cursor_line = vim.fn.line '.'
+        local lines = vim.api.nvim_buf_get_lines(0, 0, cursor_line - 1, false)
+        local cell_start = 1
+        local cell_ranges = {}
+        for i, line in ipairs(lines) do
+          if line:match '^# ?%%' then
+            if i > cell_start then
+              table.insert(cell_ranges, { cell_start, i - 1 })
+            end
+            cell_start = i + 1
+          end
+        end
+        if cell_start <= cursor_line - 1 then
+          table.insert(cell_ranges, { cell_start, cursor_line - 1 })
+        end
+        if #cell_ranges == 0 then
+          vim.notify('No cells above', vim.log.levels.WARN)
+          return
+        end
+        vim.notify('Running ' .. #cell_ranges .. ' cells above...', vim.log.levels.INFO)
+        for _, r in ipairs(cell_ranges) do
+          vim.fn.MoltenEvaluateRange(r[1], r[2])
+        end
+        vim.notify('Done (' .. #cell_ranges .. ' cells)', vim.log.levels.INFO)
+      end,
+      desc = 'run [A]ll cells above',
+    },
     { '<leader>mi', ':MoltenInit<cr>', desc = '[i]nit kernel' },
     { '<leader>md', ':MoltenDeinit<cr>', desc = '[d]einit kernel' },
     { '<leader>me', ':MoltenEvaluateOperator<cr>', desc = '[e]val operator' },

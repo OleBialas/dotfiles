@@ -65,6 +65,9 @@ npx()  { nvm; npx  "$@"; }
 # prevent VS Code askpass from interfering with CLI git
 unset GIT_ASKPASS
 
+# Force image.nvim to use direct transmission (WSL2: WezTerm can't read Linux file paths)
+export SSH_TTY=$(tty)
+
 # API keys
 export NVIDIA_API_KEY="<your-key-here>"
 

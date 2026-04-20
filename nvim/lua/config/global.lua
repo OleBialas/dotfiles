@@ -90,7 +90,7 @@ vim.opt.formatoptions:remove 'c'
 vim.opt.formatoptions:remove 'r'
 vim.opt.formatoptions:remove 'o'
 
-vim.opt.scrolloff = 5
+vim.opt.scrolloff = 999
 vim.opt.conceallevel = 0
 
 vim.diagnostic.config {
