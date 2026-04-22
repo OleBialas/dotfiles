@@ -2,7 +2,6 @@ return {
   {
     'neovim/nvim-lspconfig',
     event = { 'BufReadPre', 'BufNewFile' },
-    ft = { 'python' },
     dependencies = {
       { 'williamboman/mason.nvim' },
       { 'williamboman/mason-lspconfig.nvim' },
@@ -31,7 +30,7 @@ return {
       require('mason-tool-installer').setup {
         ensure_installed = {
           'black', 'stylua', 'shfmt', 'isort', 'tree-sitter-cli', 'jupytext',
-          'yaml-language-server', 'pyright',
+          'yaml-language-server',
         },
       }
 
@@ -125,34 +124,6 @@ return {
         vim.lsp.config(server, config)
         vim.lsp.enable(server)
       end
-
-      -- Re-fire FileType for the current buffer in case lspconfig loaded
-      -- after the event already fired (e.g. jupytext .ipynb files)
-      vim.schedule(function()
-        local ft = vim.bo.filetype
-        if ft ~= '' then
-          vim.api.nvim_exec_autocmds('FileType', { pattern = ft })
-        end
-      end)
     end,
-  },
-
-  {
-    'linux-cultist/venv-selector.nvim',
-    ft = 'python',
-    dependencies = { 'neovim/nvim-lspconfig', 'nvim-telescope/telescope.nvim' },
-    opts = {
-      fd_binary_name = 'fdfind',
-      settings = {
-        search = {
-          pixi = {
-            command = 'fdfind python$ .pixi/envs --full-path -L',
-          },
-        },
-      },
-    },
-    keys = {
-      { '<leader>lv', '<cmd>VenvSelect<cr>', desc = 'select [v]env' },
-    },
   },
 }
