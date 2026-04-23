@@ -54,5 +54,18 @@ return {
       vim.g.molten_wrap_output = true
       vim.g.molten_virt_text_output = false
     end,
+    config = function()
+      -- Change kernel working directory to the notebook's directory on init
+      vim.api.nvim_create_autocmd('User', {
+        pattern = 'MoltenInitPost',
+        callback = function()
+          local file = vim.api.nvim_buf_get_name(0)
+          local dir = vim.fn.fnamemodify(file, ':h')
+          if dir ~= '' then
+            vim.cmd('MoltenCommand %cd ' .. vim.fn.fnameescape(dir))
+          end
+        end,
+      })
+    end,
   },
 }
