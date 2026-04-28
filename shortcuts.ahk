@@ -152,3 +152,13 @@ MoveWindowToDesktop(num) {
     fallback := current > 0 ? current - 1 : 0
     DllCall("VirtualDesktopAccessor\RemoveDesktop", "UInt", current, "UInt", fallback)
 }
+
+; Right Alt + vowel: German umlauts / sharp s on English layout
+; Examples: RAlt+A => a, Shift+RAlt+A => A
+<^>!a::SendText("ä")
++<^>!a::SendText("Ä")
+<^>!o::SendText("ö")
++<^>!o::SendText("Ö")
+<^>!u::SendText("ü")
++<^>!u::SendText("Ü")
+<^>!s::SendText("ß")
