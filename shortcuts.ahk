@@ -154,11 +154,11 @@ MoveWindowToDesktop(num) {
 }
 
 ; Right Alt + vowel: German umlauts / sharp s on English layout
-; Examples: RAlt+A => a, Shift+RAlt+A => A
-<^>!a::SendText("ä")
-+<^>!a::SendText("Ä")
-<^>!o::SendText("ö")
-+<^>!o::SendText("Ö")
-<^>!u::SendText("ü")
-+<^>!u::SendText("Ü")
-<^>!s::SendText("ß")
+; Use explicit RAlt hotkeys so this works on non-German layouts too.
+>!a::SendText("ä")
+>!+a::SendText("Ä")
+>!o::SendText("ö")
+>!+o::SendText("Ö")
+>!u::SendText("ü")
+>!+u::SendText("Ü")
+>!s::SendText("ß")
