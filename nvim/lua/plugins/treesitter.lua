@@ -8,76 +8,28 @@ return {
       'nvim-treesitter/nvim-treesitter-textobjects',
     },
     config = function()
+      local parsers = {
+        'python',
+        'markdown',
+        'markdown_inline',
+        'bash',
+        'yaml',
+        'lua',
+        'vim',
+        'query',
+        'vimdoc',
+        'html',
+        'css',
+        'javascript',
+      }
+
+      require('nvim-treesitter').setup()
+      require('nvim-treesitter').install(parsers)
+
       ---@diagnostic disable-next-line: missing-fields
       vim.api.nvim_create_autocmd('FileType', {
         callback = function() pcall(vim.treesitter.start) end,
       })
-
-      require('nvim-treesitter').setup {
-        auto_install = true,
-        ensure_installed = {
-          'python',
-          'markdown',
-          'markdown_inline',
-          'bash',
-          'yaml',
-          'lua',
-          'vim',
-          'query',
-          'vimdoc',
-          'html',
-          'css',
-          'javascript',
-        },
-        highlight = {
-          enable = true,
-          additional_vim_regex_highlighting = false,
-        },
-        indent = {
-          enable = true,
-        },
-        incremental_selection = {
-          enable = true,
-          keymaps = {
-            init_selection = 'gnn',
-            node_incremental = 'grn',
-            scope_incremental = 'grc',
-            node_decremental = 'grm',
-          },
-        },
-        textobjects = {
-          select = {
-            enable = true,
-            lookahead = true,
-            keymaps = {
-              ['af'] = '@function.outer',
-              ['if'] = '@function.inner',
-              ['ac'] = '@class.outer',
-              ['ic'] = '@class.inner',
-            },
-          },
-          move = {
-            enable = true,
-            set_jumps = true,
-            goto_next_start = {
-              [']m'] = '@function.outer',
-              [']]'] = '@class.inner',
-            },
-            goto_next_end = {
-              [']M'] = '@function.outer',
-              [']['] = '@class.outer',
-            },
-            goto_previous_start = {
-              ['[m'] = '@function.outer',
-              ['[['] = '@class.inner',
-            },
-            goto_previous_end = {
-              ['[M'] = '@function.outer',
-              ['[]'] = '@class.outer',
-            },
-          },
-        },
-      }
     end,
   },
 }

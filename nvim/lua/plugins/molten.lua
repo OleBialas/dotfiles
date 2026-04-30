@@ -55,14 +55,18 @@ return {
       vim.g.molten_virt_text_output = false
     end,
     config = function()
-      -- Change kernel working directory to the notebook's directory on init
+      -- Match Jupyter/VSCode: run notebooks from the notebook file's directory.
       vim.api.nvim_create_autocmd('User', {
-        pattern = 'MoltenInitPost',
-        callback = function()
+        pattern = 'MoltenKernelReady',
+        callback = function(event)
           local file = vim.api.nvim_buf_get_name(0)
-          local dir = vim.fn.fnamemodify(file, ':h')
-          if dir ~= '' then
-            vim.cmd('MoltenCommand %cd ' .. vim.fn.fnameescape(dir))
+          local dir = vim.fn.fnamemodify(file, ':p:h')
+          local kernel_id = event.data and event.data.kernel_id
+          if dir ~= '' and kernel_id then
+            vim.api.nvim_cmd({
+              cmd = 'MoltenEvaluateArgument',
+              args = { kernel_id, '%cd ' .. vim.fn.shellescape(dir) },
+            }, {})
           end
         end,
       })

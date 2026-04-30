@@ -1,4 +1,12 @@
 #Requires AutoHotkey v2.0
+#SingleInstance Force
+#UseHook True
+
+; Keep Win+number hotkeys reliable even when the active window is elevated.
+if !A_IsAdmin {
+    try Run('*RunAs "' A_ScriptFullPath '"')
+    ExitApp
+}
 
 ; Prevent Start menu from opening on lone Win key press
 A_MenuMaskKey := "vkE8"

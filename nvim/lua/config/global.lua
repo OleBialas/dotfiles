@@ -1,6 +1,9 @@
 -- Python provider for molten-nvim
 vim.g.python3_host_prog = vim.fn.expand('~/.pixi/envs/python/bin/python')
 
+-- Make Mason-installed tools available before plugin configs run.
+vim.env.PATH = vim.fn.stdpath 'data' .. '/mason/bin:' .. vim.env.PATH
+
 -- Defer clipboard provider on WSL to avoid slow startup
 vim.g.clipboard = {
   name = 'WSL Clipboard',
