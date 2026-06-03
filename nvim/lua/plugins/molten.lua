@@ -3,6 +3,51 @@ return {
     'GCBallesteros/jupytext.nvim',
     lazy = false,
     config = function()
+      local utils = require 'jupytext.utils'
+      local language_extensions = {
+        python = 'py',
+        julia = 'jl',
+        r = 'r',
+        R = 'r',
+        bash = 'sh',
+      }
+      local language_names = {
+        python3 = 'python',
+      }
+      local default_kernel_names = {
+        python = 'python3',
+      }
+      local default_kernel_display_names = {
+        python = 'Python 3',
+      }
+
+      utils.get_ipynb_metadata = function(filename)
+        local file = assert(io.open(filename, 'r'))
+        local notebook = vim.json.decode(file:read 'a') or {}
+        file:close()
+
+        local metadata = notebook.metadata or {}
+        local kernelspec = metadata.kernelspec or {}
+        local language_info = metadata.language_info or {}
+        local language = kernelspec.language or language_names[kernelspec.name] or language_info.name or 'python'
+        language = language_names[language] or language
+
+        if metadata.kernelspec == nil then
+          notebook.metadata = metadata
+          metadata.kernelspec = {
+            display_name = default_kernel_display_names[language] or language,
+            language = language,
+            name = default_kernel_names[language] or language,
+          }
+
+          local output = assert(io.open(filename, 'w'))
+          output:write(vim.json.encode(notebook), '\n')
+          output:close()
+        end
+
+        return { language = language, extension = language_extensions[language] or 'py' }
+      end
+
       require('jupytext').setup {
         custom_language_formatting = {
           python = {
@@ -24,7 +69,7 @@ return {
 
       integrations = {
         markdown = {
-          enabled = true,
+          enabled = false,
           clear_in_insert_mode = false,
           download_remote_images = true,
           only_render_image_at_cursor = false,

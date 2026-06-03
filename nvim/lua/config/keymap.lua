@@ -58,7 +58,7 @@ nmap('<c-u>', '<c-u>zz')
 nmap('H', '<cmd>tabprevious<cr>')
 nmap('L', '<cmd>tabnext<cr>')
 
-local function run_cell()
+local function get_cell_boundaries()
   local buf = vim.api.nvim_get_current_buf()
   local cursor = vim.api.nvim_win_get_cursor(0)[1]
   local lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
@@ -82,6 +82,24 @@ local function run_cell()
     end
   end
 
+  return buf, lines, cursor, start_line, end_line, total
+end
+
+local function get_cell_marker_line()
+  local buf = vim.api.nvim_get_current_buf()
+  local cursor = vim.api.nvim_win_get_cursor(0)[1]
+  local lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
+
+  for i = cursor, 1, -1 do
+    if lines[i]:match('^# ?%%%%') then return buf, i, lines[i] end
+  end
+
+  return buf, nil, nil
+end
+
+local function run_cell()
+  local _, lines, _, start_line, end_line = get_cell_boundaries()
+
   -- strip leading/trailing blank lines
   while start_line <= end_line and lines[start_line]:match('^%s*$') do
     start_line = start_line + 1
@@ -94,6 +112,63 @@ local function run_cell()
 
   vim.fn.MoltenEvaluateRange(start_line, end_line)
   vim.api.nvim_win_set_cursor(0, { end_line, 0 })
+end
+
+local function insert_cell(cell_lines, cursor_line_offset, cursor_col)
+  local buf, _, _, _, end_line = get_cell_boundaries()
+  vim.api.nvim_buf_set_lines(buf, end_line, end_line, false, cell_lines)
+  vim.api.nvim_win_set_cursor(0, { end_line + cursor_line_offset, cursor_col })
+end
+
+local function insert_code_cell()
+  insert_cell({ '', '# %%', '' }, 3, 0)
+end
+
+local function insert_markdown_cell()
+  insert_cell({ '', '# %% [markdown]', '# ' }, 3, 2)
+end
+
+local function add_cell_tag(tag)
+  local buf, marker_line_num, marker_line = get_cell_marker_line()
+  if not marker_line_num then
+    vim.notify('No cell marker found', vim.log.levels.WARN)
+    return
+  end
+
+  local tags = {}
+  local existing_tags = marker_line:match('tags=(%b[])')
+  if existing_tags then
+    for existing_tag in existing_tags:gmatch('"([^"]+)"') do
+      tags[existing_tag] = true
+    end
+  end
+
+  if tags[tag] then
+    vim.notify('Cell already tagged: ' .. tag, vim.log.levels.INFO)
+    return
+  end
+
+  local tag_list = {}
+  if existing_tags then
+    for existing_tag in existing_tags:gmatch('"([^"]+)"') do
+      table.insert(tag_list, existing_tag)
+    end
+  end
+  table.insert(tag_list, tag)
+
+  local quoted_tags = {}
+  for _, item in ipairs(tag_list) do
+    table.insert(quoted_tags, string.format('"%s"', item))
+  end
+
+  local updated_tags = 'tags=[' .. table.concat(quoted_tags, ',') .. ']'
+  if existing_tags then
+    marker_line = marker_line:gsub('tags=%b[]', updated_tags, 1)
+  else
+    marker_line = marker_line .. ' ' .. updated_tags
+  end
+
+  vim.api.nvim_buf_set_lines(buf, marker_line_num - 1, marker_line_num, false, { marker_line })
 end
 
 local function toggle_light_dark_theme()
@@ -221,9 +296,14 @@ wk.add({
     },
     { '<leader>mi', ':MoltenInit<cr>', desc = '[i]nit kernel' },
     { '<leader>md', ':MoltenDeinit<cr>', desc = '[d]einit kernel' },
+    { '<leader>mc', insert_code_cell, desc = 'new [c]ode cell' },
+    { '<leader>mm', insert_markdown_cell, desc = 'new [m]arkdown cell' },
     { '<leader>me', ':MoltenEvaluateOperator<cr>', desc = '[e]val operator' },
     { '<leader>ml', ':MoltenEvaluateLine<cr>', desc = 'eval [l]ine' },
     { '<leader>mr', ':MoltenReevaluateCell<cr>', desc = '[r]e-eval cell' },
+    { '<leader>mt', group = '[t]ags' },
+    { '<leader>mte', function() add_cell_tag 'exercise' end, desc = 'tag [e]xercise' },
+    { '<leader>mts', function() add_cell_tag 'solution' end, desc = 'tag [s]olution' },
     { '<leader>mh', ':MoltenHideOutput<cr>', desc = '[h]ide output' },
     { '<leader>ms', ':MoltenShowOutput<cr>', desc = '[s]how output' },
     { '<leader>mo', ':noautocmd MoltenEnterOutput<cr>', desc = 'enter [o]utput' },

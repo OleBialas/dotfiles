@@ -69,6 +69,27 @@ return {
 
       vim.o.winborder = 'rounded'
 
+      local default_publish_diagnostics = vim.lsp.handlers['textDocument/publishDiagnostics']
+
+      local function apply_active_python_env(config)
+        local ok, venv_selector = pcall(require, 'venv-selector')
+        local python = ok and venv_selector.python() or nil
+        if not python or python == '' then
+          return
+        end
+
+        local venv_dir = vim.fn.fnamemodify(python, ':h:h')
+        local venv_name = vim.fn.fnamemodify(venv_dir, ':t')
+        local venv_path = vim.fn.fnamemodify(venv_dir, ':h')
+
+        config.settings = config.settings or {}
+        config.settings.python = vim.tbl_deep_extend('force', config.settings.python or {}, {
+          pythonPath = python,
+          venv = venv_name,
+          venvPath = venv_path,
+        })
+      end
+
       local capabilities = vim.lsp.protocol.make_client_capabilities()
       capabilities = vim.tbl_deep_extend('force', capabilities, require('cmp_nvim_lsp').default_capabilities())
       capabilities.textDocument.completion.completionItem.snippetSupport = true
@@ -79,6 +100,96 @@ return {
       capabilities.workspace.didChangeWatchedFiles.dynamicRegistration = false
 
       local lsp_flags = { allow_incremental_sync = true, debounce_text_changes = 150 }
+
+      local function diagnostic_line_number(diagnostic)
+        return diagnostic.lnum or diagnostic.range and diagnostic.range.start and diagnostic.range.start.line
+      end
+
+      local function is_jupyter_shell_escape(bufnr, diagnostic)
+        local line_number = diagnostic_line_number(diagnostic)
+        if line_number == nil then return false end
+
+        local ok, line = pcall(vim.api.nvim_buf_get_lines, bufnr, line_number, line_number + 1, false)
+        return ok and line[1] and line[1]:match('^%s*!') ~= nil
+      end
+
+      local function is_notebook_buffer(bufnr)
+        local name = vim.api.nvim_buf_get_name(bufnr)
+        if name:match('%.ipynb') then
+          return true
+        end
+
+        local ok, lines = pcall(vim.api.nvim_buf_get_lines, bufnr, 0, -1, false)
+        if not ok then
+          return false
+        end
+
+        for _, line in ipairs(lines) do
+          if line:match('^# %%%%') then
+            return true
+          end
+        end
+
+        return false
+      end
+
+      local function is_notebook_cell_result_expression(bufnr, diagnostic)
+        if diagnostic.code ~= 'reportUnusedExpression' then
+          return false
+        end
+
+        local line_number = diagnostic_line_number(diagnostic)
+        if line_number == nil then return false end
+
+        local ok, current_line = pcall(vim.api.nvim_buf_get_lines, bufnr, line_number, line_number + 1, false)
+        if not ok or not current_line[1] or not current_line[1]:match('^%s*[%a_][%w_%.]*%s*$') then
+          return false
+        end
+
+        local lines = vim.api.nvim_buf_get_lines(bufnr, line_number + 1, -1, false)
+        for _, line in ipairs(lines) do
+          if line:match('^# %%%%') then
+            return true
+          end
+          if line:match('%S') then
+            return false
+          end
+        end
+
+        return true
+      end
+
+      if not vim.g.notebook_diagnostic_filter_set then
+        vim.g.notebook_diagnostic_filter_set = true
+        local diagnostic_set = vim.diagnostic.set
+
+        vim.diagnostic.set = function(namespace, bufnr, diagnostics, opts)
+          if diagnostics and is_notebook_buffer(bufnr) then
+            diagnostics = vim.tbl_filter(function(diagnostic)
+              return not is_notebook_cell_result_expression(bufnr, diagnostic)
+                and not is_jupyter_shell_escape(bufnr, diagnostic)
+            end, diagnostics)
+          end
+
+          return diagnostic_set(namespace, bufnr, diagnostics, opts)
+        end
+      end
+
+      vim.lsp.handlers['textDocument/publishDiagnostics'] = function(err, result, ctx, config)
+        if result and result.diagnostics then
+          local client = vim.lsp.get_client_by_id(ctx.client_id)
+          local bufnr = vim.uri_to_bufnr(result.uri)
+          if client and client.name == 'pyright' and is_notebook_buffer(bufnr) then
+            result = vim.deepcopy(result)
+            result.diagnostics = vim.tbl_filter(function(diagnostic)
+              return not is_notebook_cell_result_expression(bufnr, diagnostic)
+                and not is_jupyter_shell_escape(bufnr, diagnostic)
+            end, result.diagnostics)
+          end
+        end
+
+        return default_publish_diagnostics(err, result, ctx, config)
+      end
 
       local servers = {
         marksman = {
@@ -107,6 +218,12 @@ return {
           filetypes = { 'sh', 'bash' },
         },
         pyright = {
+          before_init = function(_, config)
+            apply_active_python_env(config)
+          end,
+          on_new_config = function(config)
+            apply_active_python_env(config)
+          end,
           settings = {
             python = {
               analysis = {
@@ -142,12 +259,15 @@ return {
     ft = 'python',
     dependencies = { 'neovim/nvim-lspconfig', 'nvim-telescope/telescope.nvim' },
     opts = {
-      fd_binary_name = 'fdfind',
-      settings = {
-        search = {
-          pixi = {
-            command = 'fdfind python$ .pixi/envs --full-path -L',
-          },
+      options = {
+        fd_binary_name = 'fdfind',
+        on_venv_activate_callback = function()
+          require('venv-selector').restart_lsp_servers()
+        end,
+      },
+      search = {
+        pixi = {
+          command = 'fdfind python$ .pixi/envs --full-path -L',
         },
       },
     },

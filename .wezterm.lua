@@ -1,15 +1,17 @@
 local wezterm = require 'wezterm'
 local config = wezterm.config_builder()
 
--- Launch WSL Ubuntu by default
-config.default_domain = 'WSL:Ubuntu'
-config.wsl_domains = {
-  {
-    name = 'WSL:Ubuntu',
-    distribution = 'Ubuntu',
-    default_cwd = '/home/olebi',
-  },
-}
+-- Launch WSL Ubuntu by default when running on Windows.
+if wezterm.target_triple:find('windows') then
+  config.default_domain = 'WSL:Ubuntu'
+  config.wsl_domains = {
+    {
+      name = 'WSL:Ubuntu',
+      distribution = 'Ubuntu',
+      default_cwd = '/home/olebi',
+    },
+  }
+end
 
 -- Font
 config.font = wezterm.font_with_fallback {
@@ -52,6 +54,7 @@ config.cursor_blink_rate = 0
 config.audible_bell = 'Disabled'
 config.check_for_updates = false
 config.adjust_window_size_when_changing_font_size = false
+config.window_close_confirmation = 'AlwaysPrompt'
 
 -- Keybindings
 config.keys = {
