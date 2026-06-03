@@ -110,7 +110,30 @@ return {
         if line_number == nil then return false end
 
         local ok, line = pcall(vim.api.nvim_buf_get_lines, bufnr, line_number, line_number + 1, false)
-        return ok and line[1] and line[1]:match('^%s*!') ~= nil
+        return ok and line[1] and line[1]:match('^%s*[!%%]') ~= nil
+      end
+
+      local function is_notebook_shell_cell(bufnr, diagnostic)
+        local line_number = diagnostic_line_number(diagnostic)
+        if line_number == nil then
+          return false
+        end
+
+        local ok, lines = pcall(vim.api.nvim_buf_get_lines, bufnr, 0, line_number + 1, false)
+        if not ok then
+          return false
+        end
+
+        for index = #lines, 1, -1 do
+          local line = lines[index]
+          if line:match('^# %%%%') then
+            return line:match('languageId"%s*:%s*"shellscript"') ~= nil
+              or line:match('languageId"%s*:%s*"bash"') ~= nil
+              or line:match('languageId"%s*:%s*"sh"') ~= nil
+          end
+        end
+
+        return false
       end
 
       local function is_notebook_buffer(bufnr)
@@ -168,6 +191,7 @@ return {
             diagnostics = vim.tbl_filter(function(diagnostic)
               return not is_notebook_cell_result_expression(bufnr, diagnostic)
                 and not is_jupyter_shell_escape(bufnr, diagnostic)
+                and not is_notebook_shell_cell(bufnr, diagnostic)
             end, diagnostics)
           end
 
@@ -184,6 +208,7 @@ return {
             result.diagnostics = vim.tbl_filter(function(diagnostic)
               return not is_notebook_cell_result_expression(bufnr, diagnostic)
                 and not is_jupyter_shell_escape(bufnr, diagnostic)
+                and not is_notebook_shell_cell(bufnr, diagnostic)
             end, result.diagnostics)
           end
         end
